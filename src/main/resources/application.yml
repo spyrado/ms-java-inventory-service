@@ -12,8 +12,11 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: inventory-consumer-group
+      #      auto-offset-reset: earliest # Aqui eu to pedindo para o Kafka consumir todos os topicos existentes
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.ecommerce.*"
 
 server:
   port: 8082
