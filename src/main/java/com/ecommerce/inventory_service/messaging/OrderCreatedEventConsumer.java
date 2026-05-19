@@ -1,6 +1,7 @@
 package com.ecommerce.inventory_service.messaging;
 
 import com.ecommerce.inventory_service.domain.event.OrderCreatedEvent;
+import com.ecommerce.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OrderCreatedEventConsumer {
 
+  private final InventoryService inventoryService;
   private static final Logger log = LoggerFactory.getLogger(OrderCreatedEventConsumer.class);
 
   @KafkaListener(
@@ -23,5 +25,10 @@ public class OrderCreatedEventConsumer {
   )
   public void consume(OrderCreatedEvent event) {
     log.info("Evento recebido do Kafka - orderId: {}", event.orderId());
+    try {
+      inventoryService.processOrder(event);
+    } catch (Exception e) {
+      log.error("Erro ao processar estoque - orderId: {} - {}", event.orderId(), e.getMessage());
+    }
   }
 }
