@@ -1,6 +1,7 @@
 package com.ecommerce.inventory_service.messaging;
 
 import com.ecommerce.inventory_service.domain.event.OrderCreatedEvent;
+import com.ecommerce.inventory_service.exception.InsufficientStockException;
 import com.ecommerce.inventory_service.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,10 +26,6 @@ public class OrderCreatedEventConsumer {
   )
   public void consume(OrderCreatedEvent event) {
     log.info("Evento recebido do Kafka - orderId: {}", event.orderId());
-    try {
-      inventoryService.processOrder(event);
-    } catch (Exception e) {
-      log.error("Erro ao processar estoque - orderId: {} - {}", event.orderId(), e.getMessage());
-    }
+    inventoryService.processOrder(event);
   }
 }
