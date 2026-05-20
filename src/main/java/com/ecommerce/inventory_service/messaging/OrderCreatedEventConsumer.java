@@ -28,4 +28,19 @@ public class OrderCreatedEventConsumer {
     log.info("Evento recebido do Kafka - orderId: {}", event.orderId());
     inventoryService.processOrder(event);
   }
+
+  @KafkaListener(
+      topics = "order-created-dlt",
+      groupId = "inventory-dlt-consumer-group",
+      containerFactory = "dltContainerFactory", // ← usa factory sem retry/DLT
+      properties = {
+          "spring.json.value.default.type=com.ecommerce.inventory_service.domain.event.OrderCreatedEvent",
+          "spring.json.use.type.headers=false"
+      },
+      autoStartup = "true"
+  )
+  public void consumeDLT(OrderCreatedEvent event) {
+    log.warn("Reprocessando mensagem da DLT - orderId: {}", event.orderId());
+    inventoryService.processOrder(event);
+  }
 }

@@ -21,7 +21,9 @@ public class InventoryService {
 
   @Transactional
   public void processOrder(OrderCreatedEvent event) {
-    
+    if (true) {
+      throw new RuntimeException("DEU ERRO AQUI RAPAI asdasdasdsdZ");
+    }
     for (OrderItemEvent item : event.items()) {
       Product product = this.productRepository.findBySku(item.productId()).orElseThrow(() -> new RuntimeException("Produto de id: " + item.productId() + " não encontrado."));
 
