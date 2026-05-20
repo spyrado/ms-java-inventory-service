@@ -39,7 +39,6 @@ public class KafkaErrorHandlerConfig {
   public ConcurrentKafkaListenerContainerFactory<String, Object> dltContainerFactory(
       ConsumerFactory<String, Object> consumerFactory) {
 
-    // reutiliza toda a config existente e só muda o auto-offset-reset
     Map<String, Object> props = new HashMap<>(consumerFactory.getConfigurationProperties());
     props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
@@ -50,7 +49,10 @@ public class KafkaErrorHandlerConfig {
     ConcurrentKafkaListenerContainerFactory<String, Object> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(dltConsumerFactory);
-    // sem DefaultErrorHandler → não cria DLT da DLT
+
+    // 3 tentativas sem DLT — apenas loga e avança o offset
+    factory.setCommonErrorHandler(new DefaultErrorHandler(new FixedBackOff(2000L, 3)));
+
     return factory;
   }
 }
