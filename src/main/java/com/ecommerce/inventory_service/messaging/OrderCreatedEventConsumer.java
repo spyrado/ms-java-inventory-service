@@ -37,7 +37,7 @@ public class OrderCreatedEventConsumer {
           "spring.json.value.default.type=com.ecommerce.inventory_service.domain.event.OrderCreatedEvent",
           "spring.json.use.type.headers=false"
       },
-      autoStartup = "true"
+      autoStartup = "false"
   )
   public void consumeDLT(OrderCreatedEvent event) {
     log.warn("Reprocessando mensagem da DLT - orderId: {}", event.orderId());
