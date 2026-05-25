@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +29,7 @@ public class InventoryService {
   @Transactional
   public void processOrder(OrderCreatedEvent event) {
     for (OrderItemEvent item : event.items()) {
-      Product product = this.productRepository.findBySku(item.productId()).orElseThrow(() -> new RuntimeException("Produto de id: " + item.productId() + " não encontrado."));
+      Product product = this.getProductBySku(item.productId());
 
       if (product.getQuantity() < item.quantity()) {
         // estoque insuficiente → publica REJECTED
@@ -40,7 +42,7 @@ public class InventoryService {
       }
 
       product.setQuantity(product.getQuantity() - item.quantity());
-      this.productRepository.save(product);
+      this.updateProduct(product);
       // estoque debitado → publica APPROVED
       rabbitTemplate.convertAndSend(
           RabbitMQConfig.EXCHANGE,
@@ -50,5 +52,17 @@ public class InventoryService {
       log.info("Estoque debitado - SKU: {} | Quantidade: {} | Restante: {}",
           item.productId(), item.quantity(), product.getQuantity());
     }
+  }
+
+  @Cacheable(cacheNames = "stock", key = "#sku")
+  private Product getProductBySku(String sku) {
+    return this.productRepository.findBySku(sku)
+        .orElseThrow(() -> new RuntimeException("Produto de id: " + sku + " não encontrado."));
+  }
+
+
+  @CacheEvict(cacheNames = "stock", key = "#product.sku")
+  private void updateProduct(Product product) {
+    this.productRepository.save(product);
   }
 }
